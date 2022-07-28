@@ -1,0 +1,22 @@
+{
+   "member": [
+     {"name":"Cheng Qin Zheng",
+       "job": "lead"},
+     {"name":"Deng Zhi Cheng",
+       "job":"engineer"},
+     {"name":"Wang Weilin",
+       "job":"engineer"},
+     {"name":"Xie Dai Cheng",
+       "job":"engineer"},
+     {"name":"Yang Zhi Gen",
+       "job":"engineer"}
+   ],
+  "weight":[
+    {"job":"engineer","weight":[0.55, 0.1, 0.1,0.2, 0.05]},
+    {"job":"senior","weight":[0.5, 0.2, 0.1, 0.1, 0.1]},
+    {"job":"lead","weight":[0.4, 0.2, 0.1, 0.1, 0.2]},
+    {"job":"po","weight":[0.4, 0.2, 0.1, 0.2, 0.1]},
+    {"job":"scm","weight":[0.45, 0.2, 0.1, 0.2, 0.05]}
+  ]
+
+}
