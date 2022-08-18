@@ -1,0 +1,20 @@
+{
+   "member": [
+     {"name":"Alice",
+       "job": "engineer"},
+     {"name":"Bruce",
+       "job":"engineer"},
+     {"name":"candy",
+       "job":"engineer"},
+     {"name":"david",
+       "job":"engineer"}
+   ],
+  "weight":[
+    {"job":"engineer","weight":[0.55, 0.2, 0.1, 0.1, 0.05]},
+    {"job":"senior","weight":[0.5, 0.2, 0.1, 0.1, 0.1]},
+    {"job":"lead","weight":[0.4, 0.2, 0.1, 0.1, 0.2]},
+    {"job":"po","weight":[0.4, 0.2, 0.1, 0.2, 0.1]},
+    {"job":"scm","weight":[0.45, 0.2, 0.1, 0.2, 0.05]}
+  ]
+
+}
