@@ -268,9 +268,16 @@ def chartDrawer(tableName, sheetNum, name, skiprows, ifsum, ifweight,nameList):
 '''
 用来画个人对比表
 '''
-def chartDrawerSum(tableName, sheetNum, name, skiprows, nrow, historynum, ifweight,nameList):
-    rowNum = historynum
-    workbookprocessed = pd.read_excel(tableName, sheet_name=sheetNum, skiprows=skiprows, nrows=nrow, index_col=0,
+def chartDrawerSum(tableName, sheetNum, name, skiprows,ifweight,nameList):
+    rowMark=0
+    NowSheet=openpyxl.load_workbook(tableName, data_only=True).worksheets[sheetNum]
+    #TODO 涉及到对表格条目的动态获取，因为感觉不能一次处理10个月的，所以暂时写死成10，同时remind me，如果人数过多图会很拥挤，chart宽度不是自适应的。
+    for i in range(skiprows+1,skiprows+10):
+        if NowSheet.cell(row=i, column=1).value==None:
+            rowMark=i-skiprows-1
+            break
+    rowNum=rowMark-1
+    workbookprocessed = pd.read_excel(tableName, sheet_name=sheetNum, skiprows=skiprows, nrows=rowNum, index_col=0,
                                       usecols=[0, 1, 2, 3, 4, 5])
 
     # print(workbookprocessed)
@@ -470,6 +477,7 @@ def MainChartProcess(workbook, workbookname,ifweight,nameListsum,weightListsum):
                 count = count + 1
                 flag = 0
             if name in col[0].value and col[0].value[-1] != ']':
+
                 quiz = col[0].value
                 colz = []
                 colz.append(quiz)
@@ -478,7 +486,7 @@ def MainChartProcess(workbook, workbookname,ifweight,nameListsum,weightListsum):
                 for i in range(len(colz)):
                     newWorksheet.cell(commentMark, i + 1, colz[i])
                 commentMark = commentMark + 1
-                if go == 0:
+                if go == 0 and count!=0:
                     dimensionQuizNum.append(count)
                     count = 0
             if go == 0:
@@ -647,6 +655,7 @@ def sumTableGen(quizNumberL, quizmarkstartL, returnAvgL, returnCommentL, Anonymo
             nameListSuper=nameListsum[it]
             lenName=len(nameListsum[it])
 
+    #TODO 写一个数据行数处理？
 
     for name in nameListSuper:
         ws = sumChart.create_sheet(name)
@@ -705,7 +714,7 @@ def sumTableGen(quizNumberL, quizmarkstartL, returnAvgL, returnCommentL, Anonymo
         MainWorkBook.save(resultdir + saveTableName)
         # 加图,2-一定大小的行，这个要动态调整？
         sumChartRowMark = sumChartRowMark + 46
-
+        teamsMark=sumChartRowMark
         # 复制源信息
         loopTime = 0
 
@@ -716,9 +725,29 @@ def sumTableGen(quizNumberL, quizmarkstartL, returnAvgL, returnCommentL, Anonymo
             loopTime = loopTime + 1
             if loopTime == 3 + len(nameList):
                 break
+        #加入对团队的评论行
+        MainWorkBook.save(resultdir + saveTableName)
+
+        #写入数据
+        for col in MainWorkBook.worksheets[0].iter_cols():
+            if 'teams' in col[teamsMark-1].value:
+                quiz = col[teamsMark-1].value
+                colz = []
+                colz.append(quiz)
+                for cell in col[teamsMark:len(nameList)+teamsMark]:
+                    colz.append(cell.value)
+                for i in range(len(colz)):
+                    MainWorkBook.worksheets[0].cell(sumChartRowMark, i+1, colz[i])
+                    # MainWorkBook.worksheets[0].cell(row=sumChartRowMark, column=i+1).font = Font(size=30, bold=True)
+                    # MainWorkBook.worksheets[0].cell(row=sumChartRowMark, column=i+1).alignment = Alignment(
+                    #     horizontal="center",
+                    #     vertical="center",
+                    #     wrap_text=True)
+                    MainWorkBook.worksheets[0].cell(row=sumChartRowMark, column=i+1).fill = PatternFill(fill_type="solid", fgColor="f28e86")
+        #修改样式
 
         MainWorkBook.save(resultdir + saveTableName)
-        sumChartRowMark = sumChartRowMark + 3
+        sumChartRowMark = sumChartRowMark + 4
         sheetRowMark_List.append(sumChartRowMark)
 
         # 分表处理
@@ -763,7 +792,7 @@ def sumTableGen(quizNumberL, quizmarkstartL, returnAvgL, returnCommentL, Anonymo
             else:
                 lengthcomment = len(nameList) + 1
             # 复制评论
-            for k in range(5):  # row
+            for k in range(6):  # row
                 pattern_fill = PatternFill(fill_type="solid", fgColor=member_colors[k])
                 presentSheet.row_dimensions[sheetRowMark].height = 175
 
@@ -829,13 +858,11 @@ def sumTableGen(quizNumberL, quizmarkstartL, returnAvgL, returnCommentL, Anonymo
 
     # 形成自己的维度对比图并存到表格开头
 
-    for sheetNum in range(1, len(nameList) + 1):
+    for sheetNum in range(1, len(nameListSuper) + 1):
         if ifweight=='y':
-            chartDrawerSum('result\\'+saveTableName, sheetNum, nameList[sheetNum - 1], 44, len(processedWorkBookPaths),
-                       len(processedWorkBookPaths), 1,nameList)
+            chartDrawerSum('result\\'+saveTableName, sheetNum, nameListSuper[sheetNum - 1], 44, 1,nameListSuper)
         else:
-            chartDrawerSum('result\\'+saveTableName, sheetNum, nameList[sheetNum - 1], 44, len(processedWorkBookPaths),
-                       len(processedWorkBookPaths), 0,nameList)
+            chartDrawerSum('result\\'+saveTableName, sheetNum, nameListSuper[sheetNum - 1], 44, 0,nameListSuper)
         # 加入图片
         picPath = cacheDir+'ChartHistory\\history_' + str(sheetNum) + '.jpg'
         img = Image(picPath)  # 选择你的图片
@@ -844,13 +871,13 @@ def sumTableGen(quizNumberL, quizmarkstartL, returnAvgL, returnCommentL, Anonymo
         #     #把表格存到个人的分excel表中
         wb = openpyxl.load_workbook(resultdir + saveTableName, data_only=True)
         use_less = wb.sheetnames
-        use_less.remove(nameList[sheetNum - 1])
+        use_less.remove(nameListSuper[sheetNum - 1])
         for i in use_less:
             wb.remove(wb[i])
         if ifweight=='y':
-            wb.save(resultdir + '\\PersonalReport\\{}.xlsx'.format(nameList[sheetNum - 1]))
+            wb.save(resultdir + '\\PersonalReport\\{}.xlsx'.format(nameListSuper[sheetNum - 1]))
         else:
-            wb.save(resultdir + '\\PersonalReport\\{}.xlsx'.format(nameList[sheetNum - 1]))
+            wb.save(resultdir + '\\PersonalReport\\{}.xlsx'.format(nameListSuper[sheetNum - 1]))
 
 '''
 封装整个处理过程
@@ -895,7 +922,8 @@ def generateResult(workBookPaths,ifweight,nameList,weight):
 
         # Error processing,find bad list item in table.
         if QuizNum == -1:
-            print('Find Error,stop processing.')
+            print('\033[0;31;40mFind Error,stop processing.\033[0m')
+
             input("“Press Any Key to close terminal.”")
             sys.exit()
 
